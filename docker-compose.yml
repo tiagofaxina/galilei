@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  galilei-rabbitmq:
+    image: rabbitmq:3.8-management
+    container_name: galilei-rabbitmq
+    restart: on-failure
+    hostname: rabbitmq
+    volumes:
+      - .rabbitmq:/var/lib/rabbitmq
+    ports:
+      - 5672:${RABBITMQ_PORT}
+      - 15672:15672
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    networks:
+      - galilei
+  galilei-api:
+    container_name: galilei-api
+    restart: on-failure
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    command: 'yarn start:dev'
+    env_file:
+      - .env
+    networks:
+      - galilei
+    depends_on:
+      - galilei-rabbitmq
+
+networks:
+  galilei:
+
+volumes:
+  pgdata:
